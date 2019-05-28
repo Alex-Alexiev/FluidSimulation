@@ -1,6 +1,6 @@
 function setup() {
     createCanvas(N * scaleFactor, N * scaleFactor);
-    fluid = new Fluid(0.75, 0, 0);
+    fluid = new Fluid(0.4, 0, 0);
 }
 
 function draw() {
@@ -14,7 +14,7 @@ function draw() {
 }
 
 function mouseDragged() {
-    //fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 1000);
+    fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 1000);
     let vScale = 0.03;
     fluid.addVelocity(mouseX / scaleFactor, mouseY / scaleFactor, (mouseX-pmouseX)*vScale, (mouseY - pmouseY)*vScale);
 }
