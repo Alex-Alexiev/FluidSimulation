@@ -7,7 +7,7 @@ function draw() {
     background(10,10,255);
     fluid.timeStep();
     fluid.renderDensity();
-    fluid.renderVelocity();
+    //fluid.renderVelocity();
     if (keyIsPressed && key == 'd') {
         fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 1000);
     }
