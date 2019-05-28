@@ -1,11 +1,8 @@
 function IX(x, y) {
     x = Math.trunc(x);
     y = Math.trunc(y);
-    //x = constrain(x, 0, N-1);
-    //y = constrain(y, 0, N-1);
     return x + y * N;
 }
-
 
 function diffuse(b, x, x0, diff, dt) {
     let a = dt * diff * (N - 2) * (N - 2);

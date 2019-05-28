@@ -1,5 +1,5 @@
 var N = 64;
-var scaleFactor = 15;
+var scaleFactor = 10;
 var iter = 4;
 
 function Fluid(dt, diff, visc) {
@@ -67,9 +67,23 @@ Fluid.prototype.renderDensity = function () {
             let x = i*scaleFactor;
             let y = j*scaleFactor;
             let d = this.density[IX(i, j)]
-            fill(255, d);
+            fill(10,255,10, d);
             noStroke();
             square(x, y, scaleFactor);
+        }
+    }
+}
+
+Fluid.prototype.renderVelocity = function () {
+    for (let i = 0; i < N; i++){
+        for (let j = 0; j < N; j++){
+            let x = i*scaleFactor+scaleFactor/2;
+            let y = j*scaleFactor+scaleFactor/2;
+            let vScale = 300;
+            let Vx = this.Vx[IX(i, j)]*vScale;
+            let Vy = this.Vy[IX(i, j)]*vScale;
+            stroke(255,0,0);
+            line(x, y, x+Vx, y+Vy);
         }
     }
 }
