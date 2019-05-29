@@ -8,9 +8,6 @@ function draw() {
     fluid.timeStep();
     fluid.renderDensity();
     fluid.renderVelocity();
-    if (keyIsPressed && key == 'd') {
-        fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 1000);
-    }
 }
 
 function mouseDragged() {
@@ -18,9 +15,3 @@ function mouseDragged() {
     let vScale = 0.03;
     fluid.addVelocity(mouseX / scaleFactor, mouseY / scaleFactor, (mouseX-pmouseX)*vScale, (mouseY - pmouseY)*vScale);
 }
-
-function keyTyped() {
-    if (keyCode === 68) {
-        fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 1000);
-    }
-  }
