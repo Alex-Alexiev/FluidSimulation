@@ -4,14 +4,16 @@ function setup() {
 }
 
 function draw() {
-    background(10,10,255);
+    background(10, 10, 255);
     fluid.timeStep();
     fluid.renderDensity();
-    fluid.renderVelocity();
+    if (document.querySelectorAll("#velocityCheckbox")[0].checked) {
+        fluid.renderVelocity();
+    }
 }
 
 function mouseDragged() {
     fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 500);
     let vScale = 0.03;
-    fluid.addVelocity(mouseX / scaleFactor, mouseY / scaleFactor, (mouseX-pmouseX)*vScale, (mouseY - pmouseY)*vScale);
+    fluid.addVelocity(mouseX / scaleFactor, mouseY / scaleFactor, (mouseX - pmouseX) * vScale, (mouseY - pmouseY) * vScale);
 }
