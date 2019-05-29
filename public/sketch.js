@@ -11,7 +11,7 @@ function draw() {
 }
 
 function mouseDragged() {
-    fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 1000);
+    fluid.addDensity(mouseX / scaleFactor, mouseY / scaleFactor, 500);
     let vScale = 0.03;
     fluid.addVelocity(mouseX / scaleFactor, mouseY / scaleFactor, (mouseX-pmouseX)*vScale, (mouseY - pmouseY)*vScale);
 }
