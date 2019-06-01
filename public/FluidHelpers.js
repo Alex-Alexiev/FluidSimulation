@@ -11,7 +11,7 @@ function diffuse(b, x, x0, diff, dt) {
 
 function linearSolve(b, x, x0, a, c) {
     let cRecip = 1.0 / c;
-    for (let k = 0; k < iter; k++) {
+    for (let k = 0; k < linearSolveIterations; k++) {
         for (let j = 1; j < N - 1; j++) {
             for (let i = 1; i < N - 1; i++) {
                 x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i + 1, j)] + x[IX(i - 1, j)] + x[IX(i, j + 1)] + x[IX(i, j - 1)])) * cRecip;

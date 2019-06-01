@@ -1,6 +1,6 @@
 var N = 64;
 var scaleFactor = 10;
-var iter = 4;
+var linearSolveIterations = 4;
 
 function Fluid(dt, diff, visc) {
     this.size = N;
