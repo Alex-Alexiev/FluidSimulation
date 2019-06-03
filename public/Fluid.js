@@ -8,22 +8,22 @@ function Fluid(dt, diff, visc) {
     this.diff = diff;
     this.visc = visc;
 
-    this.s = new Array(N * N);
-    this.density = new Array(N * N);
+    this.currDensity = new Array(N * N);
+    this.nextDensity = new Array(N * N);
 
-    this.Vx = new Array(N * N);
-    this.Vy = new Array(N * N);
+    this.nextVelocityX = new Array(N * N);
+    this.nextVelocityY = new Array(N * N);
 
-    this.Vx0 = new Array(N * N);
-    this.Vy0 = new Array(N * N);
+    this.currVelocityX = new Array(N * N);
+    this.currVelocityY = new Array(N * N);
 
     for (let i = 0; i < N*N; i++){
-        this.s[i] = 0;
-        this.density[i] = 0;
-        this.Vx[i] = 0;
-        this.Vy[i] = 0;
-        this.Vx0[i] = 0;
-        this.Vy0[i] = 0;
+        this.currDensity[i] = 0;
+        this.nextDensity[i] = 0;
+        this.nextVelocityX[i] = 0;
+        this.nextVelocityY[i] = 0;
+        this.currVelocityX[i] = 0;
+        this.currVelocityY[i] = 0;
     }
 }
 
@@ -31,34 +31,34 @@ Fluid.prototype.timeStep = function () {
     let visc = this.visc;
     let diff = this.diff;
     let dt = this.dt;
-    let Vx = this.Vx;
-    let Vy = this.Vy;
-    let Vx0 = this.Vx0;
-    let Vy0 = this.Vy0;
-    let s = this.s;
-    let density = this.density;
+    let nextVelocityX = this.nextVelocityX;
+    let nextVelocityY = this.nextVelocityY;
+    let currVelocityX = this.currVelocityX;
+    let currVelocityY = this.currVelocityY;
+    let currDensity = this.currDensity;
+    let nextDensity = this.nextDensity;
 
-    diffuse(1, Vx0, Vx, visc, dt);
-    diffuse(2, Vy0, Vy, visc, dt);
+    diffuse(1, currVelocityX, nextVelocityX, visc, dt);
+    diffuse(2, currVelocityY, nextVelocityY, visc, dt);
 
-    project(Vx0, Vy0, Vx, Vy);
+    project(currVelocityX, currVelocityY, nextVelocityX, nextVelocityY);
 
-    advect(1, Vx, Vx0, Vx0, Vy0, dt);
-    advect(2, Vy, Vy0, Vx0, Vy0, dt);
+    advect(1, nextVelocityX, currVelocityX, currVelocityX, currVelocityY, dt);
+    advect(2, nextVelocityY, currVelocityY, currVelocityX, currVelocityY, dt);
 
-    project(Vx, Vy, Vx0, Vy0);
+    project(nextVelocityX, nextVelocityY, currVelocityX, currVelocityY);
 
-    diffuse(0, s, density, diff, dt);
-    advect(0, density, s, Vx, Vy, dt);
+    diffuse(0, currDensity, nextDensity, diff, dt);
+    advect(0, nextDensity, currDensity, nextVelocityX, nextVelocityY, dt);
 }
 
 Fluid.prototype.addDensity = function (x, y, amount) {
-    this.density[IX(x, y)] += amount;
+    this.nextDensity[IX(x, y)] += amount;
 }
 
 Fluid.prototype.addVelocity = function (x, y, amountX, amountY) {
-    this.Vx[IX(x, y)] += amountX;
-    this.Vy[IX(x, y)] += amountY;
+    this.nextVelocityX[IX(x, y)] += amountX;
+    this.nextVelocityY[IX(x, y)] += amountY;
 }
 
 Fluid.prototype.renderDensity = function () {
@@ -66,7 +66,7 @@ Fluid.prototype.renderDensity = function () {
         for (let j = 0; j < N; j++){
             let x = i*scaleFactor;
             let y = j*scaleFactor;
-            let d = this.density[IX(i, j)]
+            let d = this.nextDensity[IX(i, j)]
             fill(10,255,10, d);
             noStroke();
             square(x, y, scaleFactor);
@@ -80,10 +80,10 @@ Fluid.prototype.renderVelocity = function () {
             let x = i*scaleFactor+scaleFactor/2;
             let y = j*scaleFactor+scaleFactor/2;
             let vScale = 300;
-            let Vx = this.Vx[IX(i, j)]*vScale;
-            let Vy = this.Vy[IX(i, j)]*vScale;
+            let nextVelocityX = this.nextVelocityX[IX(i, j)]*vScale;
+            let nextVelocityY = this.nextVelocityY[IX(i, j)]*vScale;
             stroke(255,0,0);
-            line(x, y, x+Vx, y+Vy);
+            line(x, y, x+nextVelocityX, y+nextVelocityY);
         }
     }
 }
