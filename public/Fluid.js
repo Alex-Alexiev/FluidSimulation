@@ -1,23 +1,23 @@
-var N = 64;
+var gridWidth = 64;
 var scaleFactor = 10;
-var linearSolveIterations = 4;
+var linearSolveIterations = 10;
 
-function Fluid(dt, diff, visc) {
-    this.size = N;
-    this.dt = dt;
-    this.diff = diff;
-    this.visc = visc;
+function Fluid(timeStep, dyeDiffusionRate, viscosity) {
+    size = (gridWidth+2)*(gridWidth+2);
+    this.timeStep = timeStep;
+    this.dyeDiffusionRate = dyeDiffusionRate;
+    this.viscosity = viscosity;
 
-    this.currDensity = new Array(N * N);
-    this.nextDensity = new Array(N * N);
+    this.currDensity = new Array(size);
+    this.nextDensity = new Array(size);
 
-    this.nextVelocityX = new Array(N * N);
-    this.nextVelocityY = new Array(N * N);
+    this.nextVelocityX = new Array(size);
+    this.nextVelocityY = new Array(size);
 
-    this.currVelocityX = new Array(N * N);
-    this.currVelocityY = new Array(N * N);
+    this.currVelocityX = new Array(size);
+    this.currVelocityY = new Array(size);
 
-    for (let i = 0; i < N*N; i++){
+    for (let i = 0; i < size; i++){
         this.currDensity[i] = 0;
         this.nextDensity[i] = 0;
         this.nextVelocityX[i] = 0;
@@ -27,32 +27,59 @@ function Fluid(dt, diff, visc) {
     }
 }
 
-Fluid.prototype.timeStep = function () {
-    let visc = this.visc;
-    let diff = this.diff;
-    let dt = this.dt;
-    let nextVelocityX = this.nextVelocityX;
-    let nextVelocityY = this.nextVelocityY;
-    let currVelocityX = this.currVelocityX;
-    let currVelocityY = this.currVelocityY;
-    let currDensity = this.currDensity;
-    let nextDensity = this.nextDensity;
+/*
+each grid in the gridWidth*gridWidth size grid has its own velocity and density. 
+The velocity represents how fast the velcity of the fluid at that point, 
+and is shown by the red arrows in the simulation. The density isn't the density of the fluid, 
+but is the amout of dye in the fluid at that point. If there were no dye, you could not see 
+the clear fluid being moved by the velocity. 
 
-    diffuse(1, currVelocityX, nextVelocityX, visc, dt);
-    diffuse(2, currVelocityY, nextVelocityY, visc, dt);
+In each step, the velocity field evolves based on the current state, and force components. 
+Since there are no forces acting in the fluid, i ignored that term of the equation.
+The precise evolution of the velocity field is described by the Navier-Stokes partially 
+differential equations 
 
-    project(currVelocityX, currVelocityY, nextVelocityX, nextVelocityY);
+The dye is assumed to have a near zero mass (like smoke particles), and can thus be
+thought of as being pushed around by the velocity field without affecting the velocity field
+The movement of the dye is also modeled by the Navier-Stokes partially differential equations
 
-    advect(1, nextVelocityX, currVelocityX, currVelocityX, currVelocityY, dt);
-    advect(2, nextVelocityY, currVelocityY, currVelocityX, currVelocityY, dt);
+The steps to solving these equations are include diffusion, projection, and advection, 
+which are described in the FluidHelpers.js file
+*/
+Fluid.prototype.takeStep = function () {
+    /*
+    diffuse the velocities
+    */
+    diffuse(1, this.currVelocityX, this.nextVelocityX, this.viscosity, this.timeStep);
+    diffuse(2, this.currVelocityY, this.nextVelocityY, this.viscosity, this.timeStep);
 
-    project(nextVelocityX, nextVelocityY, currVelocityX, currVelocityY);
+    /*
+    correct to satisfy conservation of mass
+    */
+    project(this.currVelocityX, this.currVelocityY, this.nextVelocityX, this.nextVelocityY);
 
-    diffuse(0, currDensity, nextDensity, diff, dt);
-    advect(0, nextDensity, currDensity, nextVelocityX, nextVelocityY, dt);
+    /*
+    advecting the velocities is essentially saying that the velocity field move along itself
+    */
+    advect(1, this.nextVelocityX, this.currVelocityX, this.currVelocityX, this.currVelocityY, this.timeStep);
+    advect(2, this.nextVelocityY, this.currVelocityY, this.currVelocityX, this.currVelocityY, this.timeStep);
+
+    /*
+    correct to satisfy conservation of mass
+    */
+    project(this.nextVelocityX, this.nextVelocityY, this.currVelocityX, this.currVelocityY);
+
+    /*
+    diffuse the dye
+    */
+    diffuse(0, this.currDensity, this.nextDensity, this.dyeDiffusionRate, this.timeStep);
+    /*
+    advect the dye, make it follow the velocity field
+    */
+    advect(0, this.nextDensity, this.currDensity, this.nextVelocityX, this.nextVelocityY, this.timeStep);
 }
 
-Fluid.prototype.addDensity = function (x, y, amount) {
+Fluid.prototype.addDye = function (x, y, amount) {
     this.nextDensity[IX(x, y)] += amount;
 }
 
@@ -61,9 +88,12 @@ Fluid.prototype.addVelocity = function (x, y, amountX, amountY) {
     this.nextVelocityY[IX(x, y)] += amountY;
 }
 
+/*
+make each grid square green with the transpareny determined by the density
+*/
 Fluid.prototype.renderDensity = function () {
-    for (let i = 0; i < N; i++){
-        for (let j = 0; j < N; j++){
+    for (let i = 0; i < gridWidth; i++){
+        for (let j = 0; j < gridWidth; j++){
             let x = i*scaleFactor;
             let y = j*scaleFactor;
             let d = this.nextDensity[IX(i, j)]
@@ -74,9 +104,13 @@ Fluid.prototype.renderDensity = function () {
     }
 }
 
+/*
+draw an arrow in each grid pointing in the direciton of the velocity of the fluid
+the magnitude of the arrows shows their relative magnitudes 
+*/
 Fluid.prototype.renderVelocity = function () {
-    for (let i = 0; i < N; i++){
-        for (let j = 0; j < N; j++){
+    for (let i = 0; i < gridWidth; i++){
+        for (let j = 0; j < gridWidth; j++){
             let x = i*scaleFactor+scaleFactor/2;
             let y = j*scaleFactor+scaleFactor/2;
             let vScale = 300;
@@ -86,4 +120,9 @@ Fluid.prototype.renderVelocity = function () {
             line(x, y, x+nextVelocityX, y+nextVelocityY);
         }
     }
+}
+
+Fluid.prototype.setConstants = function (diffusionRate, viscosity){
+    this.dyeDiffusionRate = diffusionRate;
+    this.viscosity = viscosity;
 }
